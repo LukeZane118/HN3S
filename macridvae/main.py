@@ -50,7 +50,7 @@ def parse_args():
     parser.add_argument('--early_stop', type=int, default=100, help='Patience for early stop')
     
     # defense setting
-    parser.add_argument('-pm', '--perturb_method', type=str, default='', help='Method to perturb gradient')  # PDP, HN3S
+    parser.add_argument('-pm', '--perturb_method', type=str, default='', help='Method to perturb gradient')  # HNSLDP, HN3S
     parser.add_argument('--l1_norm_clip', type=float, default=0.1, help='L1 norm clipping value')
     parser.add_argument('--lam', type=float, default=0.05, help='Scale of Laplace distributions')
     parser.add_argument('--xi', type=int, default=3, help='Number of clients to be sent')

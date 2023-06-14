@@ -35,12 +35,8 @@ class Clients:
         self.l1_norm_clip = args.l1_norm_clip
         self.lam = args.lam
         self.laplace = torch.distributions.Laplace(0, torch.tensor(self.lam, device=self.device))
-        if args.perturb_method == 'FMSS':
-            self.perturb_fuc = self.FMSS_perturb
-        elif args.perturb_method == 'DP':
-            self.perturb_fuc = self.DP_perturb
-        elif args.perturb_method == 'PDP':
-            self.perturb_fuc = self.PDP_perturb
+        if args.perturb_method == 'HNSLDP':
+            self.perturb_fuc = self.HNSLDP_perturb
         elif args.perturb_method == 'HN3S':
             self.perturb_fuc = self.HN3S_perturb
         else:
@@ -53,27 +49,7 @@ class Clients:
         f1 = f1_score(x_true, x_pred)
         return pre, recall, f1
 
-    def FMSS_perturb(self, clients_grads):
-        uids = list(clients_grads.keys())
-        for uid in uids:
-            clients_to_send = np.random.choice(uids, self.xi, replace=False)
-            for grads_to_send in (clients_grads[suid] for suid in clients_to_send):
-                for name, grads in clients_grads[uid].items():
-                    random_nums = torch.randn_like(grads)
-                    grads -= random_nums
-                    grads_to_send[name] += random_nums
-
-        return clients_grads
-    
-    def DP_perturb(self, clients_grads):
-        for client_grads in clients_grads.values():
-            torch.nn.utils.clip_grad_norm_(client_grads.values(), max_norm=self.l1_norm_clip, norm_type=1)
-            for grads in client_grads.values():
-                grads.add_(self.laplace.sample(grads.size()))
-                
-        return clients_grads
-    
-    def PDP_perturb(self, clients_grads):
+    def HNSLDP_perturb(self, clients_grads):
         uids = list(clients_grads.keys())
         for uid, client_grads in zip(uids, clients_grads.values()):
             i_u = self.clients_data[uid].nonzero(as_tuple=True)[0].numpy()
@@ -129,55 +105,7 @@ class Clients:
                 grads.add_(dp_noise)
                 
         return clients_grads
-    
-    def HN3S_perturb_old(self, clients_grads):
-        uids = list(clients_grads.keys())
-        for uid in uids:
-            i_u = self.clients_data[uid].nonzero(as_tuple=True)[0].numpy()
-            sent_items = np.zeros([self.n_items], dtype=np.long)
-            sent_items[i_u] = 1
-            # fixed items for protecting interaction behaviors
-            if self.first_iter[uid]:
-                item_candidate = np.setdiff1d(np.arange(self.n_items), i_u)
-                fixed_num = int(min(self.rho * i_u.shape[0], item_candidate.shape[0]))
-                fixed_items = np.random.choice(item_candidate, fixed_num, replace=False)
-                self.fixed_items[uid] = fixed_items
-                self.first_iter[uid] = False
-            else:
-                fixed_items = self.fixed_items[uid]
-            sent_items[fixed_items] = 1
-            
-        mask = np.logical_not(sent_items.astype(bool))
-        
-        # discard gradient
-        for client_grads in clients_grads.values():
-            for name, grads in client_grads.items():
-                if name in self.protect_module_name:
-                    if grads.shape[0] == self.n_items:
-                        grads[mask] = 0.
-                    else:
-                        grads[:, mask] = 0.
-        
-        # send noise
-        for uid in uids:
-            clients_to_send = np.random.choice(uids, self.xi, replace=False)
-            for grads_to_send in (clients_grads[suid] for suid in clients_to_send):
-                for name, grads in clients_grads[uid].items():
-                    # only apply fake marks to the ID-sensitive parameters
-                    random_nums = torch.randn_like(grads)
-                    if name in self.protect_module_name:
-                        if grads.shape[0] == self.n_items:
-                            random_nums[mask] = 0.
-                        else:
-                            random_nums[:, mask] = 0.
-                        
-                    # for the convenience of programming, we send the entire tensor, i.e., random_nums,
-                    # but actually only the non-zero value of it needs to be sent
-                    grads -= random_nums
-                    grads_to_send[name] += random_nums
-                    
-        return clients_grads
-                    
+                   
     def HN3S_perturb(self, clients_grads):
         uids = np.array(list(clients_grads.keys()))
         sent_items = np.zeros([len(uids), self.n_items], dtype=np.long)
