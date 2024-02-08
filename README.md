@@ -1,7 +1,7 @@
 ## HN3S: A Federated AutoEncoder Framework for Collaborative Filtering via Hybrid Negative Sampling and Secret Sharing
 
 ## 1. Overview
-This repository is an PyTorch Implementation for "HN3S: A Federated AutoEncoder Framework for Collaborative Filtering via Hybrid Negative Sampling and Secret Sharing (under review)"
+This repository is an PyTorch Implementation for "HN3S: A Federated AutoEncoder Framework for Collaborative Filtering via Hybrid Negative Sampling and Secret Sharing (IPM 2024)"
 
 **Authors**: Lu Zhang, Guohui Li, Ling Yuan, Xuanang Ding, Qian Rong \
 **Codes**: https://github.com/LukeZane118/HN3S
