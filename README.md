@@ -8,8 +8,6 @@ This repository is an PyTorch Implementation for "HN3S: A Federated AutoEncoder 
 
 Note: this project is built upon [RecBole](https://github.com/RUCAIBox/RecBole), [rectorch](https://github.com/makgyver/rectorch) and [FMSS](https://github.com/LachlanLin/FMSS).
 
-<a name="Environment"/>
-
 ## 2. Environment:
 
 The code was developed and tested on the following python environment: 
@@ -26,7 +24,6 @@ Bottleneck 1.3.4
 scikit_learn 0.23.2
 numba 0.55.2
 ```
-<a name="instructions"/>
 
 ## 3. Instructions:
 
@@ -40,5 +37,3 @@ Train and evaluate HN3S:
   - `bash ./run_recvae.sh`
 - To evaluate HN3S on MacridVAE
   - `bash ./run_macridvae.sh`
-
-<a name="citation"/>
